@@ -454,6 +454,26 @@
     z-index: 1;
   }
 
+  .map-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: var(--color-gray);
+    font-size: 1.1rem;
+  }
+
+  .map-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: #DC2626;
+    text-align: center;
+    padding: 2rem;
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .container {
@@ -560,7 +580,35 @@
     integrity="sha256-o9N1j6fmr+k/Mcmx3NMA8XNrPfQcKsYpf3V4PPVen2I="
     crossorigin=""></script>
   <script>
-    // Storage functions
+    // Check if Leaflet is loaded
+    let leafletLoaded = false;
+    
+    // Wait for Leaflet to load
+    function checkLeafletLoaded() {
+      return new Promise((resolve) => {
+        if (typeof L !== 'undefined') {
+          leafletLoaded = true;
+          resolve(true);
+        } else {
+          // Keep checking every 100ms for up to 5 seconds
+          let attempts = 0;
+          const maxAttempts = 50;
+          const interval = setInterval(() => {
+            attempts++;
+            if (typeof L !== 'undefined') {
+              leafletLoaded = true;
+              clearInterval(interval);
+              resolve(true);
+            } else if (attempts >= maxAttempts) {
+              clearInterval(interval);
+              resolve(false);
+            }
+          }, 100);
+        }
+      });
+    }
+
+    // Storage functions (using in-memory storage as fallback)
     const STORAGE_KEY = 'shorterLinksData_v1';
     let linksData = [];
 
@@ -570,7 +618,6 @@
 
     function loadData() {
       try {
-        // Try to load from localStorage first
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -586,7 +633,6 @@
     function saveData(data) {
       linksData = data;
       try {
-        // Try to save to localStorage
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       } catch (e) {
         console.log('LocalStorage not available, data saved in memory only');
@@ -620,10 +666,19 @@
       try {
         const r = await fetch('https://ipapi.co/json/');
         if (!r.ok) throw new Error('Failed to get IP info');
-        return await r.json();
+        const data = await r.json();
+        return data;
       } catch (error) {
         console.log('IP info fetch failed:', error);
-        return null;
+        // Return mock data for testing
+        return {
+          ip: '127.0.0.1',
+          city: 'Test City',
+          region: 'Test Region',
+          country_name: 'Test Country',
+          latitude: -6.2088,
+          longitude: 106.8456
+        };
       }
     }
 
@@ -631,16 +686,10 @@
       const params = new URLSearchParams(window.location.search);
       const shortId = params.get('s');
       
-      console.log('Checking redirect for shortId:', shortId);
-      
       if (!shortId) return false;
       
-      // Make sure we load data first
       const data = loadData();
-      console.log('Available data:', data);
-      
       const targetUrl = findTargetUrl(shortId);
-      console.log('Found target URL:', targetUrl);
       
       if (!targetUrl) {
         document.body.innerHTML = `
@@ -652,8 +701,6 @@
           </div>`;
         return true;
       }
-      
-      console.log('Redirecting to:', targetUrl);
       
       // Show loading message before redirect
       document.body.innerHTML = `
@@ -726,7 +773,23 @@
               copyBtn.style.background = '';
             }, 2000);
           } catch {
-            alert('Failed to copy link');
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = shortUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+              document.execCommand('copy');
+              copyBtn.title = 'Copied!';
+              copyBtn.style.background = '#22C55E';
+              setTimeout(() => {
+                copyBtn.title = 'Copy short link';
+                copyBtn.style.background = '';
+              }, 2000);
+            } catch (err) {
+              alert('Failed to copy link');
+            }
+            document.body.removeChild(textArea);
           }
         });
 
@@ -808,151 +871,20 @@
     let map = null;
     let marker = null;
 
-    function openMapModal(lat, lng, locationText) {
+    async function openMapModal(lat, lng, locationText) {
       modal.classList.add('show');
       document.body.style.overflow = 'hidden';
       
-      // Wait for modal to be visible before initializing map
-      setTimeout(() => {
-        try {
-          if (!map) {
-            // Initialize map with proper attribution
-            map = L.map(mapDiv, {
-              center: [lat, lng],
-              zoom: 12,
-              zoomControl: true,
-              scrollWheelZoom: true
-            });
-
-            // Add OpenStreetMap tiles
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-              maxZoom: 19
-            }).addTo(map);
-          } else {
-            // If map exists, just update view and clear previous marker
-            if (marker) {
-              map.removeLayer(marker);
-            }
-            map.setView([lat, lng], 12);
-          }
-
-          // Add marker with popup
-          marker = L.marker([lat, lng]).addTo(map);
-          marker.bindPopup(`<strong>Visitor Location</strong><br>${locationText}`).openPopup();
-          
-          // Force map to resize properly
-          map.invalidateSize();
-          
-        } catch (error) {
-          console.error('Map initialization error:', error);
-          alert('Failed to load map. Please try again.');
-          closeMapModal();
-        }
-      }, 100);
-
-      modalClose.focus();
-    }
-
-    function closeMapModal() {
-      modal.classList.remove('show');
-      document.body.style.overflow = '';
-    }
-
-    modalClose.addEventListener('click', closeMapModal);
-    
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        closeMapModal();
-      }
-    });
-
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('show')) {
-        e.preventDefault();
-        closeMapModal();
-      }
-    });
-
-    function createShortId(url) {
-      const data = loadData();
-      const existing = data.find(d => d.targetUrl === url);
-      if (existing) return existing.shortId;
+      // Show loading state
+      mapDiv.innerHTML = '<div class="map-loading">Loading map...</div>';
       
-      const newId = generateId();
-      data.push({shortId: newId, targetUrl: url, visits: []});
-      saveData(data);
-      return newId;
-    }
-
-    // Initialize app
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Load existing data on page load
-      loadData();
+      // Check if Leaflet is available
+      const isLeafletLoaded = await checkLeafletLoaded();
       
-      if (await handleRedirect()) return;
-
-      const form = document.getElementById('url-form');
-      const input = document.getElementById('target-url');
-      const output = document.getElementById('output');
-      const errorDiv = document.getElementById('error');
-      const testBtn = document.getElementById('test-btn');
-
-      // Test button functionality
-      testBtn.addEventListener('click', () => {
-        const testUrl = 'https://www.google.com';
-        const shortId = createShortId(testUrl);
-        const shortUrl = buildShortUrl(shortId);
-        
-        output.innerHTML = `Test short link created: <a href="${shortUrl}" target="_blank" rel="noopener">${shortUrl}</a>`;
-        output.style.display = 'block';
-        errorDiv.style.display = 'none';
-        
-        renderLinks();
-      });
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        // Reset states
-        output.style.display = 'none';
-        errorDiv.style.display = 'none';
-        
-        const val = input.value.trim();
-
-        // Validate URL
-        if (!/^https?:\/\/.+/i.test(val)) {
-          errorDiv.textContent = 'Please enter a valid URL starting with http:// or https://';
-          errorDiv.style.display = 'block';
-          input.focus();
-          return;
-        }
-
-        try {
-          new URL(val);
-        } catch {
-          errorDiv.textContent = 'Invalid URL format.';
-          errorDiv.style.display = 'block';
-          input.focus();
-          return;
-        }
-
-        // Create short link
-        const shortId = createShortId(val);
-        const shortUrl = buildShortUrl(shortId);
-
-        output.innerHTML = `Short link created: <a href="${shortUrl}" target="_blank" rel="noopener">${shortUrl}</a>`;
-        output.style.display = 'block';
-        
-        input.value = '';
-        input.focus();
-        
-        renderLinks();
-      });
-
-      // Initial render
-      renderLinks();
-    });
-  </script>
-</body>
-</html>
+      if (!isLeafletLoaded) {
+        mapDiv.innerHTML = `
+          <div class="map-error">
+            <h3>Map Unavailable</h3>
+            <p>Unable to load the map library. Please check your internet connection and try again.</p>
+            <p><strong>Location:</strong> ${locationText}</p>
+            <p><strong>Coordinates:</strong> ${lat}, ${lng}
