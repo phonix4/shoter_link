@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Tracking Link Generator with Location Capture and Map</title>
+<title>Shorter Link</title>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-sA+eJxQ00oUnYowsZDer6XsRmXrxJRPeelROjv9lunw=" crossorigin=""/>
 <style>
-  /* Base Reset and Variables */
   *, *::before, *::after {
     box-sizing: border-box;
   }
@@ -32,67 +31,44 @@
     color: var(--clr-text-primary);
     display: flex;
     flex-direction: column;
+    align-items: center;
+    padding: 2rem;
   }
   header {
-    background: rgba(16,14,43,0.85);
-    backdrop-filter: saturate(180%) blur(12px);
-    box-shadow: var(--shadow-glass);
-    padding: 1.25rem 2rem;
-    text-align: center;
     font-weight: 900;
-    font-size: 2rem;
-    letter-spacing: 2px;
+    font-size: 2.5rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
     user-select: none;
-    color: var(--clr-text-primary);
-    position: sticky;
-    top: 0;
-    z-index: 10;
   }
-  main {
-    flex: 1;
-    width: 100%;
-    max-width: 980px;
-    margin: 3rem auto 4rem;
-    padding: 0 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 4rem;
-  }
-
   section {
     background: var(--clr-bg-card);
-    padding: 2.5rem 3rem;
+    padding: 2rem 3rem;
     border-radius: 20px;
     box-shadow: var(--shadow-glass);
     backdrop-filter: saturate(150%) blur(15px);
     border: 1px solid rgba(139, 92, 246, 0.3);
+    max-width: 800px;
+    width: 100%;
   }
-  h2 {
-    margin: 0 0 2rem;
-    font-weight: 900;
-    font-size: 2rem;
-    color: var(--clr-text-primary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
   label {
     display: block;
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     color: var(--clr-text-secondary);
     font-size: 1rem;
   }
   input[type="url"] {
     width: 100%;
-    font-size: 1.2rem;
-    padding: 16px 22px;
-    border-radius: 18px;
+    font-size: 1.1rem;
+    padding: 12px 16px;
+    border-radius: 12px;
     border: 2px solid transparent;
     background-color: rgba(255 255 255 / 0.07);
     color: var(--clr-text-primary);
-    box-shadow: inset 0 0 10px rgba(255 255 255 / 0.1);
-    transition: border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.35s ease;
+    box-shadow: inset 0 0 8px rgba(255 255 255 / 0.1);
+    transition: border-color 0.3s ease, background-color 0.3s ease;
     font-weight: 500;
     font-family: 'Poppins', sans-serif;
   }
@@ -104,21 +80,21 @@
     outline: none;
     border-color: var(--clr-accent);
     background-color: rgba(6, 182, 212, 0.15);
-    box-shadow: 0 0 12px var(--clr-accent);
+    box-shadow: 0 0 10px var(--clr-accent);
   }
   button {
-    margin-top: 2rem;
+    margin-top: 1.5rem;
     background: linear-gradient(135deg, var(--clr-primary-end), var(--clr-accent));
     border: none;
     border-radius: 24px;
-    padding: 16px 44px;
+    padding: 14px 36px;
     font-weight: 900;
     font-size: 1.2rem;
     color: white;
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    box-shadow: 0 12px 28px rgba(6, 182, 212, 0.7);
+    box-shadow: 0 10px 25px rgba(6, 182, 212, 0.7);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     font-family: 'Poppins', sans-serif;
     user-select: none;
@@ -126,8 +102,8 @@
   button:hover,
   button:focus {
     outline: none;
-    transform: translateY(-6px);
-    box-shadow: 0 16px 38px rgba(139, 92, 246, 0.75);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(139, 92, 246, 0.7);
   }
   button:disabled {
     cursor: not-allowed;
@@ -135,127 +111,81 @@
     box-shadow: none;
     transform: none;
   }
-
-  /* Tracking Links List */
-  .tracking-links-list {
-    max-height: 380px;
+  .info-message {
+    margin-top: 16px;
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+    font-style: italic;
+  }
+  .error-message {
+    color: #ff6b6b;
+    font-weight: 600;
+    margin-top: 10px;
+  }
+  /* Links list */
+  #links-list {
+    margin-top: 3rem;
+    max-height: 360px;
     overflow-y: auto;
+    background: rgba(255 255 255 / 0.1);
     border-radius: 18px;
     padding: 24px 28px;
-    background: rgba(255 255 255 / 0.09);
-    box-shadow: inset 0 0 18px rgba(255 255 255 / 0.12);
-    font-size: 1rem;
-  }
-  .tracking-link-item {
-    background: rgba(28, 26, 64, 0.75);
-    border-radius: 16px;
-    padding: 22px 28px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    box-shadow: 0 6px 20px rgba(139 92 246 / 0.3);
-    transition: box-shadow 0.3s ease;
-  }
-  .tracking-link-item:hover,
-  .tracking-link-item:focus-within {
-    box-shadow: 0 12px 38px rgba(139 92 246 / 0.55);
-  }
-  .tracking-link-item:last-child {
-    margin-bottom: 0;
-  }
-  .tracking-link-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .tracking-url {
-    color: var(--clr-text-accent);
-    font-family: 'Courier New', Courier, monospace;
-    word-break: break-word;
-    user-select: all;
-    font-weight: 700;
-    font-size: 1.05rem;
-  }
-  .tracking-link-meta {
-    font-size: 0.95rem;
-    color: var(--clr-text-secondary);
-    font-weight: 500;
-  }
-  
-  /* Visitor Logs */
-  .visitor-logs {
-    max-height: 160px;
-    overflow-y: auto;
-    padding: 16px 20px;
-    background: rgba(48, 46, 97, 0.6);
-    border-radius: 14px;
-    font-size: 0.90rem;
-    color: var(--clr-text-primary);
+    box-shadow: inset 0 0 14px rgba(255 255 255 / 0.12);
     font-family: 'Poppins', sans-serif;
-    box-shadow: inset 0 0 14px rgba(255 255 255 / 0.1);
+    color: var(--clr-text-primary);
   }
-  .visitor-log-item {
-    margin-bottom: 8px;
-    border-bottom: 1px solid rgba(139, 92, 246, 0.3);
-    padding-bottom: 6px;
-    white-space: normal;
-    user-select: text;
+  .link-item {
+    background: rgba(28,26,64,0.75);
+    border-radius: 14px;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    box-shadow: 0 5px 20px rgba(139,92,246,0.25);
+  }
+  .link-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
   }
-  .visitor-log-item:last-child {
-    margin-bottom: 0;
-    border-bottom: none;
+  .link-shorturl {
+    font-family: monospace;
+    font-weight: 700;
+    color: var(--clr-text-accent);
+    word-break: break-word;
+    white-space: pre-wrap;
   }
-  .visit-info {
-    flex: 1 1 auto;
-  }
-  .map-btn {
-    cursor: pointer;
-    border: none;
+  .copy-button {
     background: var(--clr-accent);
-    color: white;
+    border: none;
     border-radius: 50%;
-    width: 32px;
     height: 32px;
+    width: 32px;
+    cursor: pointer;
     box-shadow: 0 4px 12px rgba(6,182,212,0.7);
-    display: inline-flex;
-    align-items: center;
+    display: flex;
     justify-content: center;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    align-items: center;
+    color: white;
+    transition: background-color 0.3s ease;
   }
-  .map-btn:hover,
-  .map-btn:focus {
+  .copy-button:hover,
+  .copy-button:focus {
     background: #048aa6;
-    box-shadow: 0 6px 18px rgba(4, 138, 166, 0.85);
     outline: none;
   }
-  .map-btn:active {
-    transform: scale(0.9);
+  .copy-button svg {
+    width: 20px;
+    height: 20px;
   }
-
-  /* Responsive */
-  @media (max-width: 640px) {
-    main {
-      margin: 2rem auto 3rem;
-      padding: 0 1rem;
-      gap: 3rem;
-    }
-    section {
-      padding: 2rem 1.8rem;
-      border-radius: 16px;
-    }
-    button {
-      padding: 14px 36px;
-      font-size: 1.1rem;
-    }
+  .original-url {
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+    margin-top: 4px;
+    word-break: break-word;
+    font-style: italic;
   }
-
   /* Modal Styles */
-
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -292,7 +222,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    user-select: text;
   }
   .modal-close-btn {
     cursor: pointer;
@@ -312,68 +241,66 @@
   }
   #map {
     flex: 1;
-    /* Ensure map container sized */
     width: 100%;
     height: 100%;
   }
-  /* Leaflet overrides to fit theme */
-  .leaflet-container {
-    background: var(--clr-bg-dark);
+  .map-btn {
+    background: var(--clr-accent);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    color: white;
+    box-shadow: 0 3px 10px rgba(6,182,212,0.7);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease;
   }
-  .leaflet-popup-content-wrapper {
-    background: var(--clr-bg-card);
-    color: var(--clr-text-primary);
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
+  .map-btn:hover,
+  .map-btn:focus {
+    background: #048aa6;
+    outline: none;
   }
-  .leaflet-popup-tip {
-    background: var(--clr-bg-card);
-  }
+
 </style>
 </head>
 <body>
-<header>Tracking Link Generator with Visitor Location</header>
-<main>
-  <section aria-labelledby="create-heading" role="region">
-    <h2 id="create-heading">Create Tracking Link</h2>
-    <form id="create-link-form" novalidate>
-      <label for="target-url">Target URL</label>
-      <input
-        type="url"
-        id="target-url"
-        name="target-url"
-        placeholder="Enter a full URL, e.g. https://example.com"
-        required
-        autocomplete="off"
-        aria-describedby="url-desc"
-        pattern="https?://.+"
-        spellcheck="false"
-      />
-      <div id="url-desc" style="font-size: 0.875rem; margin-top:6px; color: var(--clr-text-secondary); max-width: 460px;">
-        Enter the full URL including <code>https://</code>. The generated link will track visitors' locations before redirecting.
-      </div>
-      <button type="submit" aria-label="Generate tracking link">Generate Tracking Link</button>
-    </form>
-  </section>
+<header>Shorter Link</header>
+<section>
+  <form id="url-form" novalidate>
+    <label for="target-url">Enter URL to shorten:</label>
+    <input 
+      id="target-url" 
+      name="target-url" 
+      type="url" 
+      required 
+      placeholder="https://example.com" 
+      autocomplete="off" 
+      aria-describedby="desc"
+      pattern="https?://.+"
+    >
+    <button type="submit" aria-label="Generate Shorter Link">Generate</button>
+    <div id="error" role="alert" aria-live="assertive" style="display:none; color:#ff6b6b; margin-top:8px;"></div>
+  </form>
+  <div id="output" style="margin-top:1.5rem; display:none;"></div>
+</section>
+<section id="links-list-container" aria-label="Your shorter links" style="max-width:800px; width:100%; margin-top:3rem;">
+  <h2 style="font-weight:700; margin-bottom:1rem;">Your Shorter Links</h2>
+  <div id="links-list" tabindex="0" aria-live="polite" aria-atomic="true" style="min-height:40px; color: var(--clr-text-secondary); font-style: italic;">
+    No shorter links created yet.
+  </div>
+</section>
 
-  <section aria-labelledby="links-heading" role="region">
-    <h2 id="links-heading">Your Tracking Links</h2>
-    <div id="tracking-links" class="tracking-links-list" tabindex="0" aria-live="polite" aria-atomic="true">
-      <!-- Tracking links will be listed here -->
-      <p style="color: var(--clr-text-secondary); font-style: italic;">No tracking links created yet.</p>
-    </div>
-  </section>
-</main>
-
-<!-- Modal for Map -->
+<!-- Modal for visitor location map -->
 <div id="modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-desc" tabindex="-1">
   <div class="modal-content">
     <div class="modal-header">
       <span id="modal-title">Visitor Location</span>
-      <button id="modal-close" class="modal-close-btn" aria-label="Close map modal">&times;</button>
+      <button id="modal-close" aria-label="Close Map" class="modal-close-btn">&times;</button>
     </div>
-    <div id="map" tabindex="0" aria-describedby="modal-desc" style="outline:none;"></div>
+    <div id="map" tabindex="0" aria-describedby="modal-desc"></div>
   </div>
 </div>
 
@@ -382,222 +309,203 @@
   integrity="sha256-o9N1j6fmr+k/Mcmx3NMA8XNrPfQcKsYpf3V4PPVen2I="
   crossorigin=""></script>
 <script>
-  const STORAGE_KEY = 'trackingLinksStorage_v1';
+  const STORAGE_KEY = 'shorterLinksData_v1';
 
-  function generateUniqueId() {
-    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-    );
+  // Utility: generate 7-8 char random id from base36
+  function generateId() {
+    return Math.random().toString(36).substring(2,10);
   }
-  function loadLinks() {
+
+  // Load data from localStorage, structured as: [{shortId, targetUrl, visits: [{timestamp, ipInfo}]}]
+  function loadData() {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (!data) return [];
-      return JSON.parse(data);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
     }
   }
-  function saveLinks(links) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
+
+  // Save data
+  function saveData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
-  function formatDateTime(timestamp) {
-    const dt = new Date(timestamp);
-    return dt.toLocaleString();
+
+  // Format datetime
+  function formatDate(ts) {
+    return new Date(ts).toLocaleString();
   }
-  async function copyText(text, button) {
+
+  // Get short link full URL with param ?s=
+  function buildShortUrl(shortId) {
+    return `${window.location.origin + window.location.pathname}?s=${encodeURIComponent(shortId)}`;
+  }
+
+  // Get url from shortId or null if not found
+  function findTargetUrl(shortId) {
+    const data = loadData();
+    const found = data.find(d => d.shortId === shortId);
+    return found ? found.targetUrl : null;
+  }
+
+  // Add visit record (IP info) to shortId entry
+  function addVisit(shortId, ipInfo) {
+    const data = loadData();
+    const rec = data.find(d => d.shortId === shortId);
+    if (!rec) return;
+    rec.visits = rec.visits || [];
+    rec.visits.push({timestamp: Date.now(), ipInfo});
+    saveData(data);
+  }
+
+  // Fetch public IP geolocation info from ipapi.co
+  async function fetchIpInfo() {
     try {
-      await navigator.clipboard.writeText(text);
-      if(button) {
-        button.setAttribute('aria-label', 'Copied');
-        const tooltip = button.querySelector('.tooltip-text');
-        if(tooltip) tooltip.textContent = 'Copied!';
-        setTimeout(() => {
-          button.setAttribute('aria-label', 'Copy to clipboard');
-          if(tooltip) tooltip.textContent = 'Copy to clipboard';
-        }, 2000);
-      }
-    } catch (e) {
-      alert('Copy failed, please copy manually.');
+      const r = await fetch('https://ipapi.co/json');
+      if (!r.ok) throw new Error('Failed to get IP info');
+      return await r.json();
+    } catch {
+      return null;
     }
   }
-  function constructTrackingUrl(id) {
-    return window.location.origin + window.location.pathname + '?shorter=' + encodeURIComponent(id);
+
+  // Handle redirect when URL has ?s=shortId param
+  async function handleRedirect() {
+    const params = new URLSearchParams(window.location.search);
+    const shortId = params.get('s');
+    if (!shortId) return false;
+    const targetUrl = findTargetUrl(shortId);
+    if (!targetUrl) {
+      document.body.innerHTML = `
+      <main style="font-family: Poppins,sans-serif; color:#ff6b6b; text-align:center; padding:4rem 1rem;">
+        <h1>Link not found</h1>
+        <p>The short link you followed does not exist.</p>
+      </main>`;
+      return true;
+    }
+    const ipInfo = await fetchIpInfo();
+    addVisit(shortId, ipInfo);
+    // Redirect immediately
+    window.location.href = targetUrl;
+    return true;
   }
+
+  // Render list of shorter links
   function renderLinks() {
-    const container = document.getElementById('tracking-links');
-    const links = loadLinks();
-    container.innerHTML = '';
-    if (links.length === 0) {
-      container.innerHTML = `<p style="color: var(--clr-text-secondary); font-style: italic;">No tracking links created yet.</p>`;
+    const container = document.getElementById('links-list');
+    const data = loadData();
+    if (data.length === 0) {
+      container.textContent = 'No shorter links created yet.';
       return;
     }
-    for (const link of links) {
+    container.innerHTML = '';
+    for (const {shortId, targetUrl, visits = []} of data) {
       const item = document.createElement('div');
-      item.className = 'tracking-link-item';
-      item.tabIndex = 0;
+      item.className = 'link-item';
 
       const header = document.createElement('div');
-      header.className = 'tracking-link-header';
+      header.className = 'link-header';
 
+      const shortUrl = buildShortUrl(shortId);
       const urlSpan = document.createElement('span');
-      urlSpan.className = 'tracking-url';
-      const url = constructTrackingUrl(link.id);
-      urlSpan.textContent = url;
+      urlSpan.className = 'link-shorturl';
+      urlSpan.textContent = shortUrl;
 
+      // Copy button with material icon
       const copyBtn = document.createElement('button');
-      copyBtn.className = 'copy-button tooltip';
+      copyBtn.className = 'copy-button';
       copyBtn.type = 'button';
-      copyBtn.setAttribute('aria-label', 'Copy to clipboard');
+      copyBtn.title = 'Copy short link';
       copyBtn.innerHTML = `<span class="material-icons" aria-hidden="true">content_copy</span>`;
-      const tooltipSpan = document.createElement('span');
-      tooltipSpan.className = 'tooltip-text';
-      tooltipSpan.textContent = 'Copy to clipboard';
-      copyBtn.appendChild(tooltipSpan);
-
-      copyBtn.addEventListener('click', e => {
-        e.preventDefault();
-        copyText(url, copyBtn);
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(shortUrl).then(() => {
+          copyBtn.title = 'Copied!';
+          setTimeout(() => copyBtn.title = 'Copy short link', 2000);
+        }).catch(() => alert('Failed to copy link'));
       });
 
       header.appendChild(urlSpan);
       header.appendChild(copyBtn);
 
-      const meta = document.createElement('div');
-      meta.className = 'tracking-link-meta';
-      meta.textContent = `Created: ${formatDateTime(link.createdAt)} | Target URL: ${link.targetUrl}`;
+      const origLink = document.createElement('div');
+      origLink.className = 'original-url';
+      origLink.textContent = `Original URL: ${targetUrl}`;
 
-      const visitsDiv = document.createElement('div');
-      visitsDiv.className = 'visitor-logs';
+      // Visits info with a button for map per visit
+      const visitsContainer = document.createElement('div');
+      visitsContainer.style.marginTop = '12px';
+      visitsContainer.style.maxHeight = '160px';
+      visitsContainer.style.overflowY = 'auto';
+      visitsContainer.style.background = 'rgba(255 255 255 / 0.05)';
+      visitsContainer.style.borderRadius = '12px';
+      visitsContainer.style.padding = '10px';
 
-      if (link.visits && link.visits.length > 0) {
-        for (const visit of link.visits) {
-          const visitItem = document.createElement('div');
-          visitItem.className = 'visitor-log-item';
-
-          const infoDiv = document.createElement('div');
-          infoDiv.className = 'visit-info';
-          const info = visit.ipInfo;
-          const locText = info ?
-            `${info.city || 'Unknown city'}, ${info.region || 'Unknown region'}, ${info.country_name || 'Unknown country'}` :
-            'Unknown location';
-
-          infoDiv.innerHTML = `<strong>${formatDateTime(visit.timestamp)}</strong> — IP: ${info?.ip || 'N/A'}, Location: ${locText}`;
-
-          visitItem.appendChild(infoDiv);
-
-          if (info && typeof info.latitude === 'number' && typeof info.longitude === 'number') {
-            const mapBtn = document.createElement('button');
-            mapBtn.className = 'map-btn tooltip';
-            mapBtn.type = 'button';
-            mapBtn.setAttribute('aria-label', `Show map for visit at ${locText}`);
-            mapBtn.innerHTML = `<span class="material-icons" aria-hidden="true">map</span>`;
-            const tooltipSpan = document.createElement('span');
-            tooltipSpan.className = 'tooltip-text';
-            tooltipSpan.textContent = 'Show Map';
-            mapBtn.appendChild(tooltipSpan);
-
-            mapBtn.addEventListener('click', e => {
-              e.preventDefault();
-              openMapModal(info.latitude, info.longitude, locText);
-            });
-
-            visitItem.appendChild(mapBtn);
-          }
-          visitsDiv.appendChild(visitItem);
-        }
+      if (visits.length === 0) {
+        visitsContainer.textContent = 'No visits yet.';
       } else {
-        visitsDiv.textContent = 'No visits recorded yet.';
+        for (const visit of visits) {
+          const v = document.createElement('div');
+          v.style.marginBottom = '6px';
+          v.style.display = 'flex';
+          v.style.justifyContent = 'space-between';
+          v.style.alignItems = 'center';
+
+          const infoText = document.createElement('div');
+          const ip = visit?.ipInfo?.ip || 'N/A';
+          const city = visit?.ipInfo?.city || 'Unknown city';
+          const region = visit?.ipInfo?.region || 'Unknown region';
+          const country = visit?.ipInfo?.country_name || 'Unknown country';
+          const time = formatDate(visit.timestamp);
+
+          infoText.textContent = `${time} — IP: ${ip} — ${city}, ${region}, ${country}`;
+          infoText.style.flex = 'auto';
+
+          v.appendChild(infoText);
+
+          if (visit.ipInfo && typeof visit.ipInfo.latitude === 'number' && typeof visit.ipInfo.longitude === 'number') {
+            const mapBtn = document.createElement('button');
+            mapBtn.className = 'map-btn';
+            mapBtn.title = 'Show on map';
+            mapBtn.innerHTML = `<span class="material-icons" aria-hidden="true">map</span>`;
+            mapBtn.addEventListener('click', () => {
+              openMapModal(visit.ipInfo.latitude, visit.ipInfo.longitude, `${city}, ${region}, ${country}`);
+            });
+            v.appendChild(mapBtn);
+          }
+
+          visitsContainer.appendChild(v);
+        }
       }
 
       item.appendChild(header);
-      item.appendChild(meta);
-      item.appendChild(visitsDiv);
+      item.appendChild(origLink);
+      item.appendChild(visitsContainer);
 
       container.appendChild(item);
     }
   }
-  function addVisit(trackId, visitorInfo) {
-    const links = loadLinks();
-    const link = links.find(l => l.id === trackId);
-    if (!link) return;
-    link.visits.push({
-      timestamp: Date.now(),
-      ipInfo: visitorInfo
-    });
-    saveLinks(links);
-  }
-  async function fetchVisitorLocation() {
-    try {
-      const response = await fetch('https://ipapi.co/json');
-      if (!response.ok) throw new Error('Failed to fetch IP location');
-      const data = await response.json();
-      return data;
-    } catch {
-      return null;
-    }
-  }
-  async function handleTrackingVisit() {
-    const params = new URLSearchParams(window.location.search);
-    const trackId = params.get('shorter');
-    if (!trackId) return false;
 
-    const visitorInfo = await fetchVisitorLocation();
-    addVisit(trackId, visitorInfo);
-
-    if (window.history.replaceState) {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('shorter');
-      window.history.replaceState({}, document.title, url.toString());
-    }
-
-    document.body.innerHTML = `
-    <div style="height:100vh; display:flex; justify-content:center; align-items:center; background: var(--clr-bg-dark); color: var(--clr-text-primary); font-family: 'Poppins', sans-serif; text-align:center; padding: 20px;">
-      <div>
-        <h1 style="margin-bottom: 0.75rem; font-weight: 900;">Logging your visit...</h1>
-        <p style="font-size: 1.125rem; color: var(--clr-text-secondary); max-width: 360px; margin: auto;">Please wait a moment, you will be redirected shortly.</p>
-        <div style="margin-top: 2rem;">
-          <span class="material-icons" style="font-size: 52px; animation: spin 1.2s linear infinite; color: var(--clr-primary-end);">autorenew</span>
-        </div>
-      </div>
-    </div>
-    <style>@keyframes spin { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }</style>
-    `;
-    const links = loadLinks();
-    const link = links.find(l => l.id === trackId);
-    const destinationUrl = link ? link.targetUrl : '/';
-    setTimeout(() => {
-      window.location.href = destinationUrl;
-    }, 2000);
-
-    return true;
-  }
-
-  // Modal logic with Leaflet Map - fix map container size and invalidateSize on modal show
+  // Modal and Leaflet map setup
   const modal = document.getElementById('modal');
-  const modalCloseBtn = document.getElementById('modal-close');
+  const modalClose = document.getElementById('modal-close');
+  const mapDiv = document.getElementById('map');
   let map = null;
   let marker = null;
 
   function openMapModal(lat, lng, locationText) {
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
-
-    // Make sure map container is sized before init
     setTimeout(() => {
       if (!map) {
-        map = L.map('map', {
+        map = L.map(mapDiv, {
           center: [lat, lng],
           zoom: 10,
-          tap: false,
-          keyboard: true,
           scrollWheelZoom: true,
-          dragging: true,
-          touchZoom: true,
-          doubleClickZoom: false
+          keyboard: true,
+          tap: false
         });
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+          attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
       } else {
         map.invalidateSize();
@@ -606,8 +514,7 @@
       }
       marker = L.marker([lat, lng]).addTo(map).bindPopup(locationText).openPopup();
     }, 150);
-
-    modalCloseBtn.focus();
+    modalClose.focus();
   }
   function closeMapModal() {
     modal.classList.remove('show');
@@ -617,79 +524,106 @@
       marker = null;
     }
   }
-  modalCloseBtn.addEventListener('click', () => {
-    closeMapModal();
-  });
+  modalClose.addEventListener('click', closeMapModal);
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape' && modal.classList.contains('show')) {
       e.preventDefault();
       closeMapModal();
     }
   });
+
+  // Focus trap in modal
   modal.addEventListener('keydown', e => {
     if (e.key === 'Tab') {
-      const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length -1];
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
+      const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) { // Shift + Tab
+        if (document.activeElement === first) {
           e.preventDefault();
-          lastElement.focus();
+          last.focus();
         }
       } else {
-        if (document.activeElement === lastElement) {
+        if (document.activeElement === last) {
           e.preventDefault();
-          firstElement.focus();
+          first.focus();
         }
       }
     }
   });
 
-  document.addEventListener('DOMContentLoaded', () => {
-    handleTrackingVisit().then(isTracking => {
-      if (!isTracking) {
-        renderLinks();
-        const form = document.getElementById('create-link-form');
-        const inputUrl = document.getElementById('target-url');
+  document.addEventListener('DOMContentLoaded', async () => {
+    if(await handleRedirect()) return;
 
-        form.addEventListener('submit', e => {
-          e.preventDefault();
-          const val = inputUrl.value.trim();
-          if (!val) return;
+    const form = document.getElementById('url-form');
+    const input = document.getElementById('target-url');
+    const output = document.getElementById('output');
 
-          try {
-            new URL(val);
-          } catch {
-            alert('Please enter a valid URL starting with https://');
-            return;
-          }
-          createTrackingLink(val);
-          inputUrl.value = '';
-          inputUrl.focus();
-        });
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      output.style.display = 'none';
+      const errBox = document.getElementById('error');
+      errBox.style.display = 'none';
+      const val = input.value.trim();
 
-        function createTrackingLink(url) {
-          const links = loadLinks();
-          const id = generateUniqueId();
-          links.push({
-            id,
-            targetUrl: url,
-            createdAt: Date.now(),
-            visits: []
-          });
-          saveLinks(links);
-          renderLinks();
-          setTimeout(() => {
-            const container = document.getElementById('tracking-links');
-            const lastItem = container.lastElementChild;
-            if(lastItem) lastItem.scrollIntoView({behavior:'smooth'});
-          }, 100);
-          return id;
-        }
+      if (!/^https?:\/\/.+/i.test(val)) {
+        errBox.textContent = 'Please enter a valid URL starting with http:// or https://';
+        errBox.style.display = 'block';
+        input.focus();
+        return;
       }
+      try {
+        new URL(val);
+      } catch {
+        errBox.textContent = 'Invalid URL format.';
+        errBox.style.display = 'block';
+        input.focus();
+        return;
+      }
+
+      const shortId = createShortId(val);
+      const shortUrl = buildShortUrl(shortId);
+
+      output.innerHTML = `Shorter link created: <a href="${shortUrl}" target="_blank" rel="noopener" style="color:#06b6d4">${shortUrl}</a>`;
+      output.style.display = 'block';
+      input.value = '';
+      input.focus();
+
+      renderLinks();
     });
+
   });
+
+  function createShortId(url) {
+    const data = loadData();
+    const existing = data.find(d => d.targetUrl === url);
+    if (existing) return existing.shortId;
+    const newId = generateId();
+    data.push({shortId: newId, targetUrl: url, visits: []});
+    saveData(data);
+    return newId;
+  }
+
+  async function handleRedirect() {
+    const params = new URLSearchParams(window.location.search);
+    const shortId = params.get('s');
+    if (!shortId) return false;
+    const targetUrl = findTargetUrl(shortId);
+    if (!targetUrl) {
+      document.body.innerHTML = `
+      <main style="font-family: Poppins,sans-serif; color:#ff6b6b; text-align:center; padding:4rem 1rem;">
+        <h1>Shorter link not found</h1>
+        <p>The short link you followed does not exist.</p>
+      </main>`;
+      return true;
+    }
+    const ipInfo = await fetchIpInfo();
+    addVisit(shortId, ipInfo);
+    // Redirect immediately
+    window.location.href = targetUrl;
+    return true;
+  }
+
 </script>
 </body>
 </html>
-
