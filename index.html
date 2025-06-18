@@ -526,6 +526,7 @@
               pattern="https?://.+"
             >
             <button type="submit" class="btn-primary">Generate Short Link</button>
+            <button type="button" id="test-btn" class="btn-primary" style="background: #8B8B8B; margin-left: 1rem;">Add Test Link</button>
             <div id="error" class="error-message" style="display:none;"></div>
             <div id="output" class="output-message" style="display:none;"></div>
           </div>
@@ -559,7 +560,8 @@
     integrity="sha256-o9N1j6fmr+k/Mcmx3NMA8XNrPfQcKsYpf3V4PPVen2I="
     crossorigin=""></script>
   <script>
-    // Storage functions using in-memory storage for Claude.ai compatibility
+    // Storage functions
+    const STORAGE_KEY = 'shorterLinksData_v1';
     let linksData = [];
 
     function generateId() {
@@ -567,11 +569,28 @@
     }
 
     function loadData() {
+      try {
+        // Try to load from localStorage first
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          linksData = parsed;
+          return parsed;
+        }
+      } catch (e) {
+        console.log('LocalStorage not available, using memory storage');
+      }
       return linksData;
     }
 
     function saveData(data) {
       linksData = data;
+      try {
+        // Try to save to localStorage
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.log('LocalStorage not available, data saved in memory only');
+      }
     }
 
     function formatDate(ts) {
@@ -611,21 +630,60 @@
     async function handleRedirect() {
       const params = new URLSearchParams(window.location.search);
       const shortId = params.get('s');
+      
+      console.log('Checking redirect for shortId:', shortId);
+      
       if (!shortId) return false;
       
+      // Make sure we load data first
+      const data = loadData();
+      console.log('Available data:', data);
+      
       const targetUrl = findTargetUrl(shortId);
+      console.log('Found target URL:', targetUrl);
+      
       if (!targetUrl) {
         document.body.innerHTML = `
           <div style="font-family: Inter, sans-serif; text-align: center; padding: 4rem 2rem; background: #FAF9F7; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
             <h1 style="color: #1A1B3A; font-size: 2rem; margin-bottom: 1rem;">Link Not Found</h1>
             <p style="color: #8B8B8B; font-size: 1.1rem;">The short link you followed does not exist.</p>
+            <p style="color: #8B8B8B; font-size: 0.9rem; margin-top: 1rem;">Short ID: ${shortId}</p>
+            <a href="${window.location.origin + window.location.pathname}" style="color: #D4AF37; text-decoration: none; margin-top: 1rem; font-weight: 600;">← Back to Home</a>
           </div>`;
         return true;
       }
       
-      const ipInfo = await fetchIpInfo();
-      addVisit(shortId, ipInfo);
-      window.location.href = targetUrl;
+      console.log('Redirecting to:', targetUrl);
+      
+      // Show loading message before redirect
+      document.body.innerHTML = `
+        <div style="font-family: Inter, sans-serif; text-align: center; padding: 4rem 2rem; background: #FAF9F7; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
+          <h1 style="color: #1A1B3A; font-size: 2rem; margin-bottom: 1rem;">Redirecting...</h1>
+          <p style="color: #8B8B8B; font-size: 1.1rem;">You will be redirected to: ${targetUrl}</p>
+          <div style="margin: 2rem 0;">
+            <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid #D4AF37; border-radius: 50%; border-top: 3px solid transparent; animation: spin 1s linear infinite;"></div>
+          </div>
+          <style>
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+        </div>`;
+      
+      // Track the visit
+      try {
+        const ipInfo = await fetchIpInfo();
+        addVisit(shortId, ipInfo);
+      } catch (error) {
+        console.log('Failed to track visit:', error);
+      }
+      
+      // Redirect after a short delay
+      setTimeout(() => {
+        window.location.href = targetUrl;
+      }, 1000);
+      
       return true;
     }
 
@@ -829,12 +887,29 @@
 
     // Initialize app
     document.addEventListener('DOMContentLoaded', async () => {
+      // Load existing data on page load
+      loadData();
+      
       if (await handleRedirect()) return;
 
       const form = document.getElementById('url-form');
       const input = document.getElementById('target-url');
       const output = document.getElementById('output');
       const errorDiv = document.getElementById('error');
+      const testBtn = document.getElementById('test-btn');
+
+      // Test button functionality
+      testBtn.addEventListener('click', () => {
+        const testUrl = 'https://www.google.com';
+        const shortId = createShortId(testUrl);
+        const shortUrl = buildShortUrl(shortId);
+        
+        output.innerHTML = `Test short link created: <a href="${shortUrl}" target="_blank" rel="noopener">${shortUrl}</a>`;
+        output.style.display = 'block';
+        errorDiv.style.display = 'none';
+        
+        renderLinks();
+      });
 
       form.addEventListener('submit', (e) => {
         e.preventDefault();
