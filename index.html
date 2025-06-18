@@ -3,608 +3,881 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Shorter Link - Visitor Location Tracker</title>
+<title>Shorter Link</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-sA+eJxQ00oUnYowsZDer6XsRmXrxJRPeelROjv9lunw=" crossorigin=""/>
 <style>
-  /* Reset and base */
   *, *::before, *::after {
     box-sizing: border-box;
   }
+  
+  :root {
+    --color-gold: #D4AF37;
+    --color-gold-light: #F4E4BC;
+    --color-gold-dark: #B8941F;
+    --color-navy: #1A1B3A;
+    --color-navy-light: #2A2D5A;
+    --color-navy-dark: #0F1025;
+    --color-white: #FFFFFF;
+    --color-cream: #FAF9F7;
+    --color-gray-light: #F5F5F5;
+    --color-gray: #8B8B8B;
+    --color-gray-dark: #4A4A4A;
+    --color-black: #000000;
+    
+    --shadow-subtle: 0 2px 20px rgba(26, 27, 58, 0.08);
+    --shadow-medium: 0 8px 40px rgba(26, 27, 58, 0.12);
+    --shadow-strong: 0 20px 60px rgba(26, 27, 58, 0.15);
+    
+    --border-radius: 8px;
+    --border-radius-large: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
   body {
-    margin:0;
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #6b21a8 0%, #0ea5e9 100%);
-    color: #fff;
+    margin: 0;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, var(--color-cream) 0%, var(--color-white) 100%);
+    color: var(--color-navy);
+    line-height: 1.6;
   }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* Header */
   header {
-    background: rgba(31, 41, 55, 0.85);
-    backdrop-filter: saturate(180%) blur(20px);
-    padding: 20px 40px;
-    text-align: center;
-    font-size: 1.8rem;
-    font-weight: 900;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    user-select: none;
-    box-shadow: 0 2px 10px rgb(0 0 0 / 0.3);
-    color: #d8b4fe;
+    background: var(--color-white);
+    box-shadow: var(--shadow-subtle);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 0;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-navy);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+    position: relative;
+  }
+
+  .logo::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light));
+  }
+
+  /* Main Content */
   main {
+    padding: 4rem 0;
+  }
+
+  .hero-section {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5rem;
+    font-weight: 600;
+    color: var(--color-navy);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  .hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--color-gray);
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Form Section */
+  .form-section {
+    background: var(--color-white);
+    border-radius: var(--border-radius-large);
+    padding: 3rem;
+    box-shadow: var(--shadow-medium);
+    margin-bottom: 4rem;
+    border: 1px solid rgba(212, 175, 55, 0.1);
+  }
+
+  .form-group {
+    margin-bottom: 2rem;
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--color-navy);
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+  }
+
+  input[type="url"] {
+    width: 100%;
+    font-size: 1.1rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--border-radius);
+    border: 2px solid var(--color-gray-light);
+    background-color: var(--color-white);
+    color: var(--color-navy);
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    font-weight: 400;
+  }
+
+  input[type="url"]::placeholder {
+    color: var(--color-gray);
+  }
+
+  input[type="url"]:focus {
+    outline: none;
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 1rem 2.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--color-white);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: var(--transition);
+    box-shadow: var(--shadow-subtle);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .btn-primary:hover::before {
+    left: 100%;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .error-message {
+    color: #DC2626;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .output-message {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(212, 175, 55, 0.1);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--color-gold);
+  }
+
+  .output-message a {
+    color: var(--color-gold-dark);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .output-message a:hover {
+    text-decoration: underline;
+  }
+
+  /* Links Section */
+  .links-section {
+    background: var(--color-white);
+    border-radius: var(--border-radius-large);
+    padding: 3rem;
+    box-shadow: var(--shadow-medium);
+    border: 1px solid rgba(212, 175, 55, 0.1);
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--color-navy);
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .links-container {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+  }
+
+  .links-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .links-container::-webkit-scrollbar-track {
+    background: var(--color-gray-light);
+    border-radius: 3px;
+  }
+
+  .links-container::-webkit-scrollbar-thumb {
+    background: var(--color-gold);
+    border-radius: 3px;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--color-gray);
+    font-style: italic;
+    padding: 2rem;
+  }
+
+  .link-card {
+    background: var(--color-cream);
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    transition: var(--transition);
+  }
+
+  .link-card:hover {
+    box-shadow: var(--shadow-subtle);
+    transform: translateY(-2px);
+  }
+
+  .link-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .short-url {
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-weight: 600;
+    color: var(--color-gold-dark);
+    word-break: break-all;
     flex: 1;
+    min-width: 0;
+  }
+
+  .btn-icon {
+    background: var(--color-gold);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    color: var(--color-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    box-shadow: var(--shadow-subtle);
+  }
+
+  .btn-icon:hover {
+    background: var(--color-gold-dark);
+    transform: scale(1.1);
+  }
+
+  .original-url {
+    font-size: 0.9rem;
+    color: var(--color-gray-dark);
+    margin-bottom: 1rem;
+    word-break: break-all;
+  }
+
+  .visits-section {
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .visits-title {
+    font-weight: 600;
+    color: var(--color-navy);
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .visit-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-gray-light);
+    gap: 1rem;
+  }
+
+  .visit-item:last-child {
+    border-bottom: none;
+  }
+
+  .visit-info {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--color-gray-dark);
+    line-height: 1.4;
+  }
+
+  .btn-map {
+    background: var(--color-navy);
+    border: none;
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    color: var(--color-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    flex-shrink: 0;
+  }
+
+  .btn-map:hover {
+    background: var(--color-navy-light);
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 2rem;
+  }
+
+  .modal-overlay.show {
+    display: flex;
+  }
+
+  .modal-content {
+    background: var(--color-white);
+    border-radius: var(--border-radius-large);
+    width: 100%;
     max-width: 900px;
-    margin: 2rem auto 3rem;
-    background: rgba(31, 41, 55, 0.9);
-    border-radius: 20px;
-    padding: 30px 35px 40px;
-    box-shadow: 0 10px 30px rgb(139 92 246 / 0.3);
+    height: 80vh;
+    max-height: 600px;
+    box-shadow: var(--shadow-strong);
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
   }
-  form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: center;
-  }
-  input[type="text"] {
-    flex: 1 1 300px;
-    padding: 12px 20px;
+
+  .modal-header {
+    padding: 1.5rem 2rem;
+    background: var(--color-navy);
+    color: var(--color-white);
+    font-weight: 600;
     font-size: 1.2rem;
-    border-radius: 16px;
-    border: none;
-    background: rgba(255 255 255 / 0.08);
-    color: white;
-    box-shadow: inset 0 0 14px rgb(111 66 193 / 0.7);
-    transition: background-color 0.3s ease;
-  }
-  input[type="text"]::placeholder {
-    color: rgba(255 255 255 / 0.6);
-  }
-  input[type="text"]:focus {
-    outline: none;
-    background: rgba(255 255 255 / 0.15);
-    box-shadow: 0 0 16px #8b5cf6, inset 0 0 14px rgb(139 92 246 / 0.9);
-  }
-  button {
-    font-weight: 800;
-    font-size: 1.1rem;
-    padding: 12px 28px;
-    border-radius: 16px;
-    border: none;
-    background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 8px 24px rgb(6 182 212 / 0.6);
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    user-select: none;
-  }
-  button:hover, button:focus {
-    background: linear-gradient(135deg, #7c3aed, #0d9488);
-    transform: translateY(-3px);
-  }
-  button:disabled {
-    background: rgba(139, 92, 246, 0.3);
-    cursor: default;
-  }
-  #errorMsg {
-    color: #f87171;
-    font-weight: 600;
-    text-align: center;
-    margin-top: 4px;
-  }
-  #results {
     display: flex;
-    gap: 2rem;
-    margin-top: 1rem;
+    justify-content: space-between;
+    align-items: center;
   }
-  #visits-list {
-    flex: 1 1 300px;
-    background: rgba(139, 92, 246, 0.15);
-    border-radius: 16px;
-    overflow-y: auto;
-    max-height: 480px;
-    padding: 16px 20px;
-    box-shadow: inset 0 0 20px rgb(139 92 246 / 0.4);
-  }
-  #visits-list h3 {
-    margin: 0 0 12px;
-    font-weight: 800;
-    font-size: 1.4rem;
-    color: #e0d7ff;
-    letter-spacing: 0.05em;
-    user-select: none;
-  }
-  #visits-list .visit-item {
-    background: rgba(255 255 255 / 0.1);
-    margin-bottom: 14px;
-    border-radius: 12px;
-    padding: 14px 16px;
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--color-white);
+    font-size: 1.5rem;
     cursor: pointer;
-    transition: background-color 0.25s ease;
-    user-select: text;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: var(--transition);
   }
-  #visits-list .visit-item:hover,
-  #visits-list .visit-item.active {
-    background: rgba(255 255 255 / 0.25);
+
+  .modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
-  #visits-list .visit-item:last-child {
-    margin-bottom: 0;
-  }
-  #visit-info {
-    font-size: 1rem;
-    margin-bottom: 6px;
-    font-weight: 600;
-  }
-  #visit-location {
-    font-size: 0.9rem;
-    color: #d8b4fe;
-  }
-  #map-container {
-    flex: 1 1 500px;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgb(111 66 193 / 0.7);
-  }
+
   #map {
+    flex: 1;
     width: 100%;
-    height: 480px;
-    border-radius: 20px;
+    height: 100%;
+    z-index: 1;
   }
-  footer {
-    text-align: center;
-    font-size: 0.9rem;
-    color: rgba(255 255 255 / 0.5);
-    padding: 12px 8px;
-    user-select: none;
-  }
-  /* Scrollbar style */
-  #visits-list::-webkit-scrollbar {
-    width: 8px;
-  }
-  #visits-list::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0);
-  }
-  #visits-list::-webkit-scrollbar-thumb {
-    background: rgba(139,92,246,0.6);
-    border-radius: 6px;
-  }
+
   /* Responsive */
   @media (max-width: 768px) {
-    main {
-      margin: 1.5rem auto 2rem;
-      padding: 20px 25px;
+    .container {
+      padding: 0 1rem;
     }
-    #results {
+
+    .hero-title {
+      font-size: 2.5rem;
+    }
+
+    .form-section,
+    .links-section {
+      padding: 2rem;
+    }
+
+    .link-header {
       flex-direction: column;
+      align-items: flex-start;
     }
-    #map-container, #visits-list {
-      max-height: 300px;
-      height: 300px;
+
+    .short-url {
+      margin-bottom: 0.5rem;
     }
-    #map {
-      height: 100%;
+
+    .modal-content {
+      margin: 1rem;
+      height: calc(100vh - 2rem);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .form-section,
+    .links-section {
+      padding: 1.5rem;
     }
   }
 </style>
 </head>
 <body>
-<header>Shorter Link</header>
-<main>
-  <form id="shorten-form" aria-label="Shorter Link Search Form" autocomplete="off" novalidate>
-    <input type="text" id="short-input" name="short-input" placeholder="Enter short code or full short link URL (e.g., ?s=abc123)" aria-describedby="form-desc" required />
-    <button type="submit" aria-label="Search shorter link visits">Search</button>
-    <div id="errorMsg" role="alert" aria-live="assertive" style="display:none;"></div>
-  </form>
-
-  <section id="results" aria-live="polite" aria-atomic="true" style="display:none;">
-    <div id="visits-list" aria-label="List of visits"></div>
-    <div id="map-container">
-      <div id="map" aria-label="Map showing visitor location"></div>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="#" class="logo">Shorter Link</a>
+      </div>
     </div>
-  </section>
-</main>
-<footer>© 2024 Shorter Link</footer>
+  </header>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-o9N1j6fmr+k/Mcmx3NMA8XNrPfQcKsYpf3V4PPVen2I="
-  crossorigin=""></script>
-<script>
-  // Data structure: stored as array of { shortId, targetUrl, visits: [{ timestamp, ipInfo }] }
-  const storageKey = 'shorterLinkAppData_v1';
+  <main>
+    <div class="container">
+      <section class="hero-section">
+        <h1 class="hero-title">Elegant Link Shortening</h1>
+        <p class="hero-subtitle">Transform your lengthy URLs into sophisticated, trackable short links with detailed analytics and visitor location tracking.</p>
+      </section>
 
-  // DOM elements
-  const form = document.getElementById('shorten-form');
-  const shortInput = document.getElementById('short-input');
-  const errorMsg = document.getElementById('errorMsg');
-  const resultsSection = document.getElementById('results');
-  const visitsList = document.getElementById('visits-list');
-  const mapContainer = document.getElementById('map-container');
+      <section class="form-section">
+        <form id="url-form" novalidate>
+          <div class="form-group">
+            <label for="target-url">Enter URL to shorten:</label>
+            <input 
+              id="target-url" 
+              name="target-url" 
+              type="url" 
+              required 
+              placeholder="https://example.com" 
+              autocomplete="off"
+              pattern="https?://.+"
+            >
+            <button type="submit" class="btn-primary">Generate Short Link</button>
+            <div id="error" class="error-message" style="display:none;"></div>
+            <div id="output" class="output-message" style="display:none;"></div>
+          </div>
+        </form>
+      </section>
 
-  // Leaflet map and marker global
-  let map = null;
-  let marker = null;
-  let currentActiveVisit = null;
+      <section class="links-section">
+        <h2 class="section-title">Your Short Links</h2>
+        <div class="links-container">
+          <div id="links-list" class="empty-state">
+            No short links created yet.
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
 
-  // Load stored data
-  function loadData() {
-    const raw = localStorage.getItem(storageKey);
-    try {
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  }
+  <!-- Modal for visitor location map -->
+  <div id="modal" class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>Visitor Location</span>
+        <button id="modal-close" class="modal-close" aria-label="Close Map">&times;</button>
+      </div>
+      <div id="map"></div>
+    </div>
+  </div>
 
-  // Save data
-  function saveData(data) {
-    localStorage.setItem(storageKey, JSON.stringify(data));
-  }
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j6fmr+k/Mcmx3NMA8XNrPfQcKsYpf3V4PPVen2I="
+    crossorigin=""></script>
+  <script>
+    // Storage functions using in-memory storage for Claude.ai compatibility
+    let linksData = [];
 
-  // Format datetime nicely
-  function formatDateTime(ts) {
-    return new Date(ts).toLocaleString();
-  }
-
-  // Get link object by shortId
-  function getLink(shortId) {
-    return loadData().find(d => d.shortId === shortId);
-  }
-
-  // Update visits list UI
-  function renderVisits(link) {
-    visitsList.innerHTML = '';
-    if (!link || !link.visits || link.visits.length === 0) {
-      visitsList.textContent = 'No visit data found for this short link.';
-      clearMap();
-      return;
-    }
-    link.visits.forEach((visit, idx) => {
-      const item = document.createElement('div');
-      item.className = 'visit-item';
-      item.tabIndex = 0;
-      if (idx === 0) item.classList.add('active');
-      item.textContent = `${formatDateTime(visit.timestamp)} | IP: ${visit.ipInfo?.ip || 'N/A'} | Location: ${visit.ipInfo?.city || 'Unknown'}, ${visit.ipInfo?.region || ''} ${visit.ipInfo?.country_name || ''}`;
-      item.onclick = () => selectVisit(item, visit);
-      item.onkeydown = (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          selectVisit(item, visit);
-        }
-      };
-      visitsList.appendChild(item);
-      if (idx === 0) updateMap(visit);
-    });
-  }
-
-  // Initialize map viewer or reset to given location
-  function initMap(lat, lon, label) {
-    if (!map) {
-      map = L.map('map', { scrollWheelZoom: false });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-    }
-    map.setView([lat, lon], 10);
-    if (marker) {
-      marker.setLatLng([lat, lon]).setPopupContent(label);
-    } else {
-      marker = L.marker([lat, lon]).addTo(map).bindPopup(label).openPopup();
-    }
-    map.invalidateSize();
-  }
-
-  // Update map with visit location or show no data
-  function updateMap(visit) {
-    if (!visit.ipInfo || typeof visit.ipInfo.latitude !== 'number' || typeof visit.ipInfo.longitude !== 'number') {
-      clearMap('Location data not available');
-      return;
-    }
-    const label = `${visit.ipInfo.city || 'Unknown city'}, ${visit.ipInfo.region || ''} ${visit.ipInfo.country_name || ''}`;
-    initMap(visit.ipInfo.latitude, visit.ipInfo.longitude, label);
-  }
-
-  // Clear map marker or show empty
-  function clearMap(message) {
-    if (marker) {
-      map.removeLayer(marker);
-      marker = null;
-    }
-    if (map) {
-      map.setView([20,0], 2);
-    }
-    if (message) {
-      visitsList.insertAdjacentHTML('afterend', `<div style="padding:1rem; text-align:center; color:#d8b4fe; font-style: italic;">${message}</div>`);
-    }
-  }
-
-  // Handle visit selection
-  function selectVisit(item, visit) {
-    if (currentActiveVisit) currentActiveVisit.classList.remove('active');
-    item.classList.add('active');
-    currentActiveVisit = item;
-    updateMap(visit);
-  }
-
-  // URL param short link redirect & logging
-  async function handleShortLinkRedirect() {
-    const params = new URLSearchParams(window.location.search);
-    const shortId = params.get('s');
-    if(!shortId) return false;
-    const link = getLink(shortId);
-    if (!link) {
-      document.body.innerHTML = `
-      <main style="font-family: 'Poppins', sans-serif; color: #f87171; text-align:center; padding: 3rem 1rem;">
-        <h1>Short Link Not Found</h1>
-        <p>The short link you followed does not exist.</p>
-      </main>`;
-      return true;
-    }
-    const ipInfo = await fetchIpInfo();
-    addVisit(shortId, ipInfo);
-    window.location.href = link.targetUrl;
-    return true;
-  }
-
-  // Fetch IP-based location from ipapi.co
-  async function fetchIpInfo() {
-    try {
-      const res = await fetch('https://ipapi.co/json');
-      if(!res.ok) throw new Error('Failed to fetch IP info');
-      return await res.json();
-    } catch {
-      return null;
-    }
-  }
-
-  // Add visit record and save
-  function addVisit(shortId, ipInfo) {
-    const data = loadData();
-    const link = data.find(d => d.shortId === shortId);
-    if (!link) return;
-    link.visits = link.visits || [];
-    link.visits.unshift({ timestamp: Date.now(), ipInfo });
-    saveData(data);
-  }
-
-  // Short ID generator
-  function generateShortId() {
-    return Math.random().toString(36).slice(2, 10);
-  }
-
-  // Create short link record or return existing
-  function createShortLink(url) {
-    const data = loadData();
-    const found = data.find(d => d.targetUrl === url);
-    if (found) return found.shortId;
-    const newShortId = generateShortId();
-    data.push({ shortId: newShortId, targetUrl: url, visits: [] });
-    saveData(data);
-    return newShortId;
-  }
-
-  // Form submission handler
-  function handleFormSubmit(e) {
-    e.preventDefault();
-    errorMsg.style.display = 'none';
-
-    let val = shortInput.value.trim();
-
-    if(!val) {
-      showError('Please enter a valid URL or short link.');
-      return;
+    function generateId() {
+      return Math.random().toString(36).substring(2,10);
     }
 
-    // Parse full short link or pure short id
-    let shortId = '';
-    try {
-      const url = new URL(val, window.location.origin);
-      if(url.searchParams.has('s')) {
-        shortId = url.searchParams.get('s');
-      } else {
-        // The input might be a raw URL (target URL)
-        shortId = null;
-      }
-    } catch {
-      // Not a full URL, treat as raw short id or invalid url
-      if(val.match(/^[a-zA-Z0-9]{6,10}$/)) {
-        shortId = val;
-      } else {
-        shortId = null;
-      }
+    function loadData() {
+      return linksData;
     }
 
-    if(shortId) {
-      // Lookup and show visits and map for this shortId
-      const link = getLink(shortId);
-      if (!link) {
-        showError('Short link not found.');
-        return;
-      }
-      displayResult(link);
-      return;
+    function saveData(data) {
+      linksData = data;
     }
 
-    // Otherwise treat val as URL to shorten
-    if (!/^https?:\/\/.+/.test(val)) {
-      showError('Please enter a valid URL starting with http:// or https://');
-      return;
-    }
-    try {
-      new URL(val);
-    } catch {
-      showError('Invalid URL format.');
-      return;
+    function formatDate(ts) {
+      return new Date(ts).toLocaleString();
     }
 
-    const newShortId = createShortLink(val);
-    const shortUrl = `${window.location.origin}${window.location.pathname}?s=${encodeURIComponent(newShortId)}`;
-
-    const createdMsg = `
-      <div style="margin-bottom: 1rem;">
-        Short link created:&nbsp;
-        <a href="${shortUrl}" target="_blank" rel="noopener" style="color:#06b6d4; font-weight:700;">${shortUrl}</a>
-      </div>`;
-    
-    shortInput.value = '';
-    showInfo(createdMsg);
-
-    displayResult(getLink(newShortId));
-  }
-
-  // Display error message
-  function showError(msg) {
-    errorMsg.textContent = msg;
-    errorMsg.style.display = 'block';
-  }
-
-  // Display informational message
-  function showInfo(msg) {
-    errorMsg.style.display = 'none';
-    if(!infoDiv) {
-      infoDiv = document.createElement('div');
-      infoDiv.style.marginTop = '1rem';
-      infoDiv.style.color = '#9ca3af';
-      form.appendChild(infoDiv);
-    }
-    infoDiv.innerHTML = msg;
-  }
-
-  // Display visits and map for selected link
-  function displayResult(link) {
-    resultsSection.style.display = 'flex';
-    renderVisits(link);
-  }
-
-  // Render visits list UI
-  function renderVisits(link) {
-    visitsList.innerHTML = '';
-    if (!link.visits || link.visits.length === 0) {
-      visitsList.textContent = 'No visits recorded yet for this link.';
-      clearMap();
-      return;
+    function buildShortUrl(shortId) {
+      return `${window.location.origin + window.location.pathname}?s=${encodeURIComponent(shortId)}`;
     }
 
-    link.visits.forEach((visit, idx) => {
-      const div = document.createElement('div');
-      div.className = 'visit-item';
-      div.tabIndex = 0;
-      if(idx === 0) div.classList.add('active');
-
-      const ip = visit.ipInfo?.ip ?? 'N/A';
-      const city = visit.ipInfo?.city ?? 'Unknown city';
-      const region = visit.ipInfo?.region ?? 'Unknown region';
-      const country = visit.ipInfo?.country_name ?? 'Unknown country';
-
-      div.textContent = `${formatDateTime(visit.timestamp)} | IP: ${ip} | ${city}, ${region}, ${country}`;
-      div.onclick = () => selectVisit(div, visit);
-      div.onkeydown = (e) => {
-        if(e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          selectVisit(div, visit);
-        }
-      };
-      visitsList.appendChild(div);
-
-      if(idx === 0) updateMap(visit);
-    });
-  }
-
-  // Select visit from list
-  function selectVisit(element, visit) {
-    const prevActive = document.querySelector('#visits-list .visit-item.active');
-    if(prevActive) prevActive.classList.remove('active');
-    element.classList.add('active');
-    updateMap(visit);
-  }
-
-  // Initialize or update Leaflet map
-  function updateMap(visit) {
-    if (!visit.ipInfo || !visit.ipInfo.latitude || !visit.ipInfo.longitude) {
-      clearMap('Location data unavailable for this visit.');
-      return;
-    }
-    const lat = visit.ipInfo.latitude;
-    const lon = visit.ipInfo.longitude;
-    const label = `${visit.ipInfo.city ?? 'Unknown city'}, ${visit.ipInfo.region ?? ''} ${visit.ipInfo.country_name ?? ''}`;
-    if(!map) {
-      map = L.map('map', {
-        center: [lat, lon],
-        zoom: 10,
-        scrollWheelZoom: false,
-        keyboard: true,
-        tap: false
-      });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-      marker = L.marker([lat, lon]).addTo(map).bindPopup(label).openPopup();
-    } else {
-      map.setView([lat, lon], 10);
-      if(marker) marker.setLatLng([lat, lon]).setPopupContent(label).openPopup();
-      else marker = L.marker([lat, lon]).addTo(map).bindPopup(label).openPopup();
-      map.invalidateSize();
-    }
-  }
-  // Clear map or show default message
-  function clearMap(msg) {
-    if(marker) {
-      map.removeLayer(marker);
-      marker = null;
-    }
-    if(map) {
-      map.setView([20,0], 2);
-    }
-    visitsList.insertAdjacentHTML('afterend', `<div style="padding:1rem; text-align:center; color:#d8b4fe; font-style: italic;">${msg}</div>`);
-  }
-
-  document.addEventListener('DOMContentLoaded', async () => {
-    // If short param present, instantly redirect but log visit
-    const params = new URLSearchParams(window.location.search);
-    const shortId = params.get('s');
-    if(shortId) {
+    function findTargetUrl(shortId) {
       const data = loadData();
-      const link = data.find(d => d.shortId === shortId);
-      if(!link) {
-        document.body.innerHTML = `<main style="font-family:Poppins,sans-serif; text-align:center; color:#f87171; padding:3rem 1rem;">
-        <h1>Short Link Not Found</h1><p>No matching short link in database.</p></main>`;
-        return;
+      const found = data.find(d => d.shortId === shortId);
+      return found ? found.targetUrl : null;
+    }
+
+    function addVisit(shortId, ipInfo) {
+      const data = loadData();
+      const rec = data.find(d => d.shortId === shortId);
+      if (!rec) return;
+      rec.visits = rec.visits || [];
+      rec.visits.push({timestamp: Date.now(), ipInfo});
+      saveData(data);
+    }
+
+    async function fetchIpInfo() {
+      try {
+        const r = await fetch('https://ipapi.co/json/');
+        if (!r.ok) throw new Error('Failed to get IP info');
+        return await r.json();
+      } catch (error) {
+        console.log('IP info fetch failed:', error);
+        return null;
       }
+    }
+
+    async function handleRedirect() {
+      const params = new URLSearchParams(window.location.search);
+      const shortId = params.get('s');
+      if (!shortId) return false;
+      
+      const targetUrl = findTargetUrl(shortId);
+      if (!targetUrl) {
+        document.body.innerHTML = `
+          <div style="font-family: Inter, sans-serif; text-align: center; padding: 4rem 2rem; background: #FAF9F7; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
+            <h1 style="color: #1A1B3A; font-size: 2rem; margin-bottom: 1rem;">Link Not Found</h1>
+            <p style="color: #8B8B8B; font-size: 1.1rem;">The short link you followed does not exist.</p>
+          </div>`;
+        return true;
+      }
+      
       const ipInfo = await fetchIpInfo();
       addVisit(shortId, ipInfo);
-      // Redirect after short delay to allow logging
+      window.location.href = targetUrl;
+      return true;
+    }
+
+    function renderLinks() {
+      const container = document.getElementById('links-list');
+      const data = loadData();
+      
+      if (data.length === 0) {
+        container.className = 'empty-state';
+        container.textContent = 'No short links created yet.';
+        return;
+      }
+
+      container.className = '';
+      container.innerHTML = '';
+
+      for (const {shortId, targetUrl, visits = []} of data) {
+        const card = document.createElement('div');
+        card.className = 'link-card';
+
+        const header = document.createElement('div');
+        header.className = 'link-header';
+
+        const shortUrl = buildShortUrl(shortId);
+        const urlSpan = document.createElement('div');
+        urlSpan.className = 'short-url';
+        urlSpan.textContent = shortUrl;
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'btn-icon';
+        copyBtn.title = 'Copy short link';
+        copyBtn.innerHTML = '<span class="material-icons">content_copy</span>';
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(shortUrl);
+            copyBtn.title = 'Copied!';
+            copyBtn.style.background = '#22C55E';
+            setTimeout(() => {
+              copyBtn.title = 'Copy short link';
+              copyBtn.style.background = '';
+            }, 2000);
+          } catch {
+            alert('Failed to copy link');
+          }
+        });
+
+        header.appendChild(urlSpan);
+        header.appendChild(copyBtn);
+
+        const origUrl = document.createElement('div');
+        origUrl.className = 'original-url';
+        origUrl.textContent = `Original: ${targetUrl}`;
+
+        const visitsSection = document.createElement('div');
+        visitsSection.className = 'visits-section';
+
+        const visitsTitle = document.createElement('div');
+        visitsTitle.className = 'visits-title';
+        visitsTitle.textContent = `Visits (${visits.length})`;
+
+        visitsSection.appendChild(visitsTitle);
+
+        if (visits.length === 0) {
+          const noVisits = document.createElement('div');
+          noVisits.style.color = '#8B8B8B';
+          noVisits.style.fontStyle = 'italic';
+          noVisits.textContent = 'No visits yet.';
+          visitsSection.appendChild(noVisits);
+        } else {
+          for (const visit of visits) {
+            const visitItem = document.createElement('div');
+            visitItem.className = 'visit-item';
+
+            const visitInfo = document.createElement('div');
+            visitInfo.className = 'visit-info';
+            
+            const ip = visit?.ipInfo?.ip || 'N/A';
+            const city = visit?.ipInfo?.city || 'Unknown city';
+            const region = visit?.ipInfo?.region || 'Unknown region';
+            const country = visit?.ipInfo?.country_name || 'Unknown country';
+            const time = formatDate(visit.timestamp);
+
+            visitInfo.innerHTML = `
+              <div><strong>${time}</strong></div>
+              <div>IP: ${ip} • ${city}, ${region}, ${country}</div>
+            `;
+
+            visitItem.appendChild(visitInfo);
+
+            if (visit.ipInfo && 
+                typeof visit.ipInfo.latitude === 'number' && 
+                typeof visit.ipInfo.longitude === 'number') {
+              const mapBtn = document.createElement('button');
+              mapBtn.className = 'btn-map';
+              mapBtn.title = 'Show on map';
+              mapBtn.innerHTML = '<span class="material-icons" style="font-size: 16px;">map</span>';
+              mapBtn.addEventListener('click', () => {
+                openMapModal(
+                  visit.ipInfo.latitude, 
+                  visit.ipInfo.longitude, 
+                  `${city}, ${region}, ${country}`
+                );
+              });
+              visitItem.appendChild(mapBtn);
+            }
+
+            visitsSection.appendChild(visitItem);
+          }
+        }
+
+        card.appendChild(header);
+        card.appendChild(origUrl);
+        card.appendChild(visitsSection);
+        container.appendChild(card);
+      }
+    }
+
+    // Modal and Map functionality
+    const modal = document.getElementById('modal');
+    const modalClose = document.getElementById('modal-close');
+    const mapDiv = document.getElementById('map');
+    let map = null;
+    let marker = null;
+
+    function openMapModal(lat, lng, locationText) {
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      
+      // Wait for modal to be visible before initializing map
       setTimeout(() => {
-        window.location.href = link.targetUrl;
-      }, 700);
-      document.body.innerHTML = `<main style="font-family:Poppins,sans-serif; text-align:center; padding:5rem 1rem; color:#fff;">
-      <h1 style="margin-bottom:1rem;">Redirecting...</h1>
-      <p style="opacity:0.8;">You will be redirected shortly to the destination.</p>
-      </main>`;
-      return;
+        try {
+          if (!map) {
+            // Initialize map with proper attribution
+            map = L.map(mapDiv, {
+              center: [lat, lng],
+              zoom: 12,
+              zoomControl: true,
+              scrollWheelZoom: true
+            });
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              maxZoom: 19
+            }).addTo(map);
+          } else {
+            // If map exists, just update view and clear previous marker
+            if (marker) {
+              map.removeLayer(marker);
+            }
+            map.setView([lat, lng], 12);
+          }
+
+          // Add marker with popup
+          marker = L.marker([lat, lng]).addTo(map);
+          marker.bindPopup(`<strong>Visitor Location</strong><br>${locationText}`).openPopup();
+          
+          // Force map to resize properly
+          map.invalidateSize();
+          
+        } catch (error) {
+          console.error('Map initialization error:', error);
+          alert('Failed to load map. Please try again.');
+          closeMapModal();
+        }
+      }, 100);
+
+      modalClose.focus();
     }
 
-    // Normal UI for shortening & viewing visits
-    form.addEventListener('submit', handleFormSubmit);
-  });
-
-  // Fetch visitor IP/location info
-  async function fetchIpInfo() {
-    try {
-      const res = await fetch('https://ipapi.co/json');
-      if(!res.ok) throw new Error('IP info fetch failed');
-      return await res.json();
-    } catch {
-      return null;
+    function closeMapModal() {
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
     }
-  }
 
-</script>
+    modalClose.addEventListener('click', closeMapModal);
+    
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeMapModal();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('show')) {
+        e.preventDefault();
+        closeMapModal();
+      }
+    });
+
+    function createShortId(url) {
+      const data = loadData();
+      const existing = data.find(d => d.targetUrl === url);
+      if (existing) return existing.shortId;
+      
+      const newId = generateId();
+      data.push({shortId: newId, targetUrl: url, visits: []});
+      saveData(data);
+      return newId;
+    }
+
+    // Initialize app
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (await handleRedirect()) return;
+
+      const form = document.getElementById('url-form');
+      const input = document.getElementById('target-url');
+      const output = document.getElementById('output');
+      const errorDiv = document.getElementById('error');
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // Reset states
+        output.style.display = 'none';
+        errorDiv.style.display = 'none';
+        
+        const val = input.value.trim();
+
+        // Validate URL
+        if (!/^https?:\/\/.+/i.test(val)) {
+          errorDiv.textContent = 'Please enter a valid URL starting with http:// or https://';
+          errorDiv.style.display = 'block';
+          input.focus();
+          return;
+        }
+
+        try {
+          new URL(val);
+        } catch {
+          errorDiv.textContent = 'Invalid URL format.';
+          errorDiv.style.display = 'block';
+          input.focus();
+          return;
+        }
+
+        // Create short link
+        const shortId = createShortId(val);
+        const shortUrl = buildShortUrl(shortId);
+
+        output.innerHTML = `Short link created: <a href="${shortUrl}" target="_blank" rel="noopener">${shortUrl}</a>`;
+        output.style.display = 'block';
+        
+        input.value = '';
+        input.focus();
+        
+        renderLinks();
+      });
+
+      // Initial render
+      renderLinks();
+    });
+  </script>
 </body>
 </html>
